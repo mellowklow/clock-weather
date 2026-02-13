@@ -3,85 +3,136 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Overlay</title>
+<title>Overlay Pro</title>
+
 <style>
 body{
   margin:0;
   background:transparent;
   font-family:sans-serif;
+  overflow:hidden;
 }
 
 #overlay{
   position:fixed;
   top:20px;
   right:20px;
-  background:rgba(255,255,255,0.5);
-  color:#000;
-  padding:14px 22px;
-  border-radius:16px;
-  backdrop-filter:blur(8px);
-  min-width:220px;
+  display:flex;
+  align-items:center;
+  gap:30px;
 }
 
-@media (orientation: landscape){
-  #overlay{
-    top:15px;
-    right:25px;
-  }
+/* ===== アニメ ===== */
+
+@keyframes neonPulse{
+  0%,100%{ filter:brightness(1); }
+  50%{ filter:brightness(1.4); }
 }
 
+@keyframes floatIcon{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-8px); }
+}
+
+@keyframes flash{
+  0%{ opacity:1; }
+  50%{ opacity:0.2; }
+  100%{ opacity:1; }
+}
+
+@keyframes pop{
+  0%{ transform:scale(1); }
+  50%{ transform:scale(1.25); }
+  100%{ transform:scale(1); }
+}
+
+/* ===== 時刻 ===== */
 #clock{
-  font-size:24px;
+  font-size:72px;
   font-weight:bold;
-  text-align:center;
-  margin-bottom:6px;
+  color:white;
+  -webkit-text-stroke:3px #00ff66;
+  text-shadow:0 0 15px #00ff66;
+  animation:neonPulse 2s infinite;
 }
 
 #date{
-  font-size:14px;
-  text-align:center;
-  margin-bottom:10px;
+  font-size:28px;
+  font-weight:bold;
+  color:#00ff66;
 }
 
-#weatherMain{
+/* ===== 天気 ===== */
+#weatherBlock{
   display:flex;
-  justify-content:center;
   align-items:center;
-  gap:8px;
-  font-size:15px;
-  margin-bottom:6px;
+  gap:15px;
 }
 
-#details{
-  font-size:13px;
-  text-align:center;
-  line-height:1.4;
+#weatherIcon{
+  width:55px;
+  height:55px;
+  animation:floatIcon 3s infinite ease-in-out;
 }
 
-#weatherMain img{
-  width:24px;
-  height:24px;
+#location{
+  font-size:30px;
+  font-weight:bold;
+  color:white;
+}
+
+#maxTemp{
+  margin-top:8px;
+  background:rgba(255,255,255,0.9);
+  color:black;
+  padding:6px 14px;
+  border-radius:10px;
+  font-size:18px;
+  display:inline-block;
+  transition:all 0.3s ease;
 }
 </style>
 </head>
+
 <body>
 
 <div id="overlay">
-  <div id="clock"></div>
-  <div id="date"></div>
-  <div id="weatherMain"></div>
-  <div id="details"></div>
+
+  <div>
+    <div id="clock"></div>
+    <div id="date"></div>
+  </div>
+
+  <div id="weatherBlock">
+    <img id="weatherIcon">
+    <div>
+      <div id="location">神奈川県</div>
+      <div id="maxTemp"></div>
+    </div>
+  </div>
+
 </div>
 
 <script>
 
-/* ===== 時計＋曜日 ===== */
+/* ===== 時計（分変化でフラッシュ） ===== */
+let lastMinute=null;
+
 function updateClock(){
-  const now = new Date();
-  const time = now.toLocaleTimeString("ja-JP",{hour:'2-digit',minute:'2-digit'});
-  const date = now.toLocaleDateString("ja-JP",{month:'numeric',day:'numeric',weekday:'short'});
-  document.getElementById("clock").innerHTML = time;
-  document.getElementById("date").innerHTML = date;
+  const now=new Date();
+  const minute=now.getMinutes();
+  const time=now.toLocaleTimeString("ja-JP",{hour:'2-digit',minute:'2-digit'});
+  const date=now.toLocaleDateString("ja-JP",{month:'numeric',day:'numeric',weekday:'short'});
+  document.getElementById("clock").innerHTML=time;
+  document.getElementById("date").innerHTML=date;
+
+  if(lastMinute!==null && minute!==lastMinute){
+    document.getElementById("clock").style.animation="flash 0.4s";
+    setTimeout(()=>{
+      document.getElementById("clock").style.animation="neonPulse 2s infinite";
+    },400);
+  }
+  lastMinute=minute;
 }
 setInterval(updateClock,1000);
 updateClock();
@@ -91,37 +142,33 @@ const apiKey="4dfed084e66b5b585ee8898bfb877e8d";
 const city="Yokohama,JP";
 
 function updateWeather(){
-
-// 現在天気
 fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&lang=ja&appid=${apiKey}`)
 .then(res=>res.json())
 .then(data=>{
   const icon=data.weather[0].icon;
-  const description=data.weather[0].description;
-  const temp=Math.round(data.main.temp);
+  const main=data.weather[0].main;
   const tempMax=Math.round(data.main.temp_max);
-  const tempMin=Math.round(data.main.temp_min);
-  const location=data.name;
 
-  document.getElementById("weatherMain").innerHTML=
-  `<img src="https://openweathermap.org/img/wn/${icon}@2x.png">
-   ${description} ${temp}°C`;
+  document.getElementById("weatherIcon").src=
+  `https://openweathermap.org/img/wn/${icon}@2x.png`;
 
-  // 3時間予報から降水確率取得
-  return fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&lang=ja&appid=${apiKey}`)
-  .then(res=>res.json())
-  .then(forecast=>{
-    const pop = Math.round(forecast.list[0].pop * 100);
+  const tempBox=document.getElementById("maxTemp");
+  tempBox.innerHTML=`最高${tempMax}℃`;
+  tempBox.style.animation="pop 0.4s";
 
-    document.getElementById("details").innerHTML=
-      `📍 ${location}<br>
-       🌡 最高 ${tempMax}° / 最低 ${tempMin}°<br>
-       🌧 降水確率 ${pop}%`;
-  });
+  setTimeout(()=>{ tempBox.style.animation=""; },400);
 
-})
-.catch(error=>{
-  document.getElementById("weatherMain").innerHTML="天気取得エラー";
+  /* 天気別ネオン色 */
+  let color="#00ff66";
+  if(main==="Clear") color="#ffaa00";
+  if(main==="Clouds") color="#ffffff";
+  if(main==="Rain") color="#00aaff";
+  if(main==="Snow") color="#00ffff";
+
+  document.getElementById("clock").style.webkitTextStroke=`3px ${color}`;
+  document.getElementById("clock").style.textShadow=`0 0 15px ${color}`;
+  document.getElementById("date").style.color=color;
+
 });
 }
 
