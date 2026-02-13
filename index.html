@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overlay</title>
 <style>
 body{
   margin:0;
@@ -20,10 +21,9 @@ body{
   border-radius:16px;
   text-align:center;
   backdrop-filter:blur(8px);
-  min-width:160px;
+  min-width:170px;
 }
 
-/* 横画面最適化 */
 @media (orientation: landscape){
   #overlay{
     top:15px;
@@ -59,6 +59,7 @@ body{
 </div>
 
 <script>
+/* ===== 時計 ===== */
 function updateClock(){
   const now=new Date();
   document.getElementById("clock").innerHTML=
@@ -67,35 +68,29 @@ function updateClock(){
 setInterval(updateClock,1000);
 updateClock();
 
+/* ===== 天気（横浜固定） ===== */
 const apiKey="4dfed084e66b5b585ee8898bfb877e8d";
+const city="Yokohama,JP";
 
-function updateWeather(lat,lon){
-fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=ja&appid=${apiKey}`)
+function updateWeather(){
+fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&lang=ja&appid=${apiKey}`)
 .then(res=>res.json())
 .then(data=>{
-  const icon = data.weather[0].icon;
-  const description = data.weather[0].description;
-  const temp = Math.round(data.main.temp);
+  const icon=data.weather[0].icon;
+  const description=data.weather[0].description;
+  const temp=Math.round(data.main.temp);
+
   document.getElementById("weather").innerHTML=
-    `<img src="https://openweathermap.org/img/wn/${icon}.png">
-     ${description} ${temp}°C`;
+  `<img src="https://openweathermap.org/img/wn/${icon}@2x.png">
+   ${description} ${temp}°C`;
+})
+.catch(error=>{
+  document.getElementById("weather").innerHTML="天気取得エラー";
 });
 }
 
-if(navigator.geolocation){
-  navigator.geolocation.getCurrentPosition(
-    pos=>updateWeather(pos.coords.latitude,pos.coords.longitude),
-    err=>console.log(err)
-  );
-}
-
-setInterval(()=>{
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(
-      pos=>updateWeather(pos.coords.latitude,pos.coords.longitude)
-    );
-  }
-},600000);
+updateWeather();
+setInterval(updateWeather,600000);
 </script>
 
 </body>
