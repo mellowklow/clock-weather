@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{
+  margin:0;
+  background:transparent;
+  font-family:sans-serif;
+}
+
+#overlay{
+  position:fixed;
+  top:20px;
+  right:20px;
+  background:rgba(255,255,255,0.5);
+  color:#000;
+  padding:12px 20px;
+  border-radius:16px;
+  text-align:center;
+  backdrop-filter:blur(8px);
+  min-width:160px;
+}
+
+/* 横画面最適化 */
+@media (orientation: landscape){
+  #overlay{
+    top:15px;
+    right:25px;
+  }
+}
+
+#clock{
+  font-size:26px;
+  font-weight:bold;
+  margin-bottom:8px;
+}
+
+#weather{
+  font-size:15px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:6px;
+}
+
+#weather img{
+  width:22px;
+  height:22px;
+}
+</style>
+</head>
+<body>
+
+<div id="overlay">
+  <div id="clock"></div>
+  <div id="weather">Loading...</div>
+</div>
+
+<script>
+function updateClock(){
+  const now=new Date();
+  document.getElementById("clock").innerHTML=
+    now.toLocaleTimeString("ja-JP",{hour:'2-digit',minute:'2-digit'});
+}
+setInterval(updateClock,1000);
+updateClock();
+
+const apiKey=4dfed084e66b5b585ee8898bfb877e8d;
+
+function updateWeather(lat,lon){
+fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=ja&appid=${apiKey}`)
+.then(res=>res.json())
+.then(data=>{
+  const icon = data.weather[0].icon;
+  const description = data.weather[0].description;
+  const temp = Math.round(data.main.temp);
+  document.getElementById("weather").innerHTML=
+    `<img src="https://openweathermap.org/img/wn/${icon}.png">
+     ${description} ${temp}°C`;
+});
+}
+
+if(navigator.geolocation){
+  navigator.geolocation.getCurrentPosition(
+    pos=>updateWeather(pos.coords.latitude,pos.coords.longitude),
+    err=>console.log(err)
+  );
+}
+
+setInterval(()=>{
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      pos=>updateWeather(pos.coords.latitude,pos.coords.longitude)
+    );
+  }
+},600000);
+</script>
+
+</body>
+</html>
