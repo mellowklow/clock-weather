@@ -67,7 +67,7 @@ function updateClock(){
 setInterval(updateClock,1000);
 updateClock();
 
-const apiKey=4dfed084e66b5b585ee8898bfb877e8d;
+const apiKey="4dfed084e66b5b585ee8898bfb877e8d";
 
 function updateWeather(lat,lon){
 fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=ja&appid=${apiKey}`)
