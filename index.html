@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Overlay Pro Stable</title>
+<title>Overlay Pro</title>
 
 <style>
 body{
@@ -73,7 +73,6 @@ body{
   width:55px;
   height:55px;
   animation:floatIcon 3s infinite ease-in-out;
-  filter:drop-shadow(0 0 10px #00ff66);
 }
 
 #location{
@@ -146,19 +145,17 @@ function updateWeather(){
 fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&lang=ja&appid=${apiKey}`)
 .then(res=>res.json())
 .then(data=>{
-  if(!data.weather){ return; }
-
   const icon=data.weather[0].icon;
   const main=data.weather[0].main;
   const tempMax=Math.round(data.main.temp_max);
 
-  /* ★ CDN版アイコン（タイムアウト対策） */
   document.getElementById("weatherIcon").src=
-  `https://cdn.jsdelivr.net/gh/openweathermap/img/wn/${icon}@2x.png`;
+  `https://openweathermap.org/img/wn/${icon}@2x.png`;
 
   const tempBox=document.getElementById("maxTemp");
   tempBox.innerHTML=`最高${tempMax}℃`;
   tempBox.style.animation="pop 0.4s";
+
   setTimeout(()=>{ tempBox.style.animation=""; },400);
 
   /* 天気別ネオン色 */
@@ -172,9 +169,6 @@ fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&la
   document.getElementById("clock").style.textShadow=`0 0 15px ${color}`;
   document.getElementById("date").style.color=color;
 
-})
-.catch(()=>{
-  document.getElementById("maxTemp").innerHTML="取得エラー";
 });
 }
 
