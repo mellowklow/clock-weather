@@ -3,114 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cyber Tactical HUD PRO</title>
+<title>業務用タクティカルHUD</title>
+
+<!-- Orbitronのみ使用 -->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
 
 <style>
 body{
   margin:0;
   background:transparent;
-  font-family:monospace;
+  font-family:'Orbitron', monospace;
   overflow:hidden;
   color:#00ffaa;
 }
 
-/* ===== 動くホログラム ===== */
-@keyframes holoMove{
-  0%{background-position:0 0;}
-  100%{background-position:300px 300px;}
-}
-
-#hologram{
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  background:
-    radial-gradient(circle at 20% 30%, rgba(0,255,200,0.06), transparent 40%),
-    radial-gradient(circle at 80% 70%, rgba(0,200,255,0.05), transparent 40%),
-    repeating-linear-gradient(
-      90deg,
-      rgba(0,255,200,0.03),
-      rgba(0,255,200,0.03) 1px,
-      transparent 1px,
-      transparent 6px
-    );
-  animation:holoMove 40s linear infinite;
-}
-
-/* ===== メインHUD ===== */
+/* HUD本体 */
 #hud{
   position:fixed;
   top:20px;
   right:20px;
-  width:400px;
+  width:420px;
   padding:20px;
-  border:2px solid #00ffaa;
-  box-shadow:
-    0 0 15px #00ffaa,
-    0 0 40px #00eaff;
+  border:2px solid currentColor;
+  box-shadow:0 0 20px currentColor,0 0 40px currentColor;
   background:rgba(0,0,0,0.25);
-  backdrop-filter:blur(8px);
+  backdrop-filter:blur(6px);
+  transition:all 0.5s ease;
 }
 
-/* AIステータス */
-@keyframes blink{
-  0%,100%{opacity:1;}
-  50%{opacity:0.4;}
-}
-
-#aiStatus{
-  font-size:12px;
-  color:#00eaff;
-  margin-bottom:6px;
-  letter-spacing:2px;
-  animation:blink 2s infinite;
-}
-
-/* ===== 強グリッチ ===== */
-@keyframes glitch{
-  0%{ transform:translate(0); }
-  20%{ transform:translate(-3px,3px); }
-  40%{ transform:translate(3px,-3px); }
-  60%{ transform:translate(-3px,-3px); }
-  80%{ transform:translate(3px,3px); }
-  100%{ transform:translate(0); }
-}
-
+/* 時計 */
 #clock{
   font-size:60px;
   font-weight:bold;
   color:white;
-  text-shadow:
-    0 0 10px #00ffaa,
-    0 0 25px #00eaff;
-}
-
-.glitch{
-  animation:glitch 0.3s;
+  text-shadow:0 0 15px currentColor,0 0 30px currentColor;
 }
 
 #date{
   font-size:14px;
-  color:#00eaff;
+  margin-bottom:6px;
 }
 
 .divider{
   height:1px;
-  background:linear-gradient(to right,#00ffaa,#00eaff);
+  background:currentColor;
   margin:12px 0;
-}
-
-/* 天気 */
-#weather{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-#weather img{
-  width:50px;
-  height:50px;
-  filter:drop-shadow(0 0 10px #00ffaa);
 }
 
 .dataLine{
@@ -118,41 +55,24 @@ body{
   margin-top:4px;
 }
 
-/* HP風ゲージ */
-#tempBarContainer{
-  margin-top:12px;
+/* ゲージ */
+.gaugeContainer{
+  margin-top:10px;
   width:100%;
   height:10px;
-  border:1px solid #00ffaa;
-  position:relative;
+  border:1px solid currentColor;
   overflow:hidden;
 }
 
-#tempBar{
+.gauge{
   height:100%;
   width:50%;
-  background:linear-gradient(to right,#00ffaa,#00eaff);
-  box-shadow:0 0 15px #00eaff;
+  background:linear-gradient(to right,currentColor,#00eaff);
+  box-shadow:0 0 10px currentColor;
   transition:width 0.5s ease;
 }
 
-/* スキャンライン */
-@keyframes scan{
-  0%{top:-100%;}
-  100%{top:100%;}
-}
-
-#scanline{
-  position:absolute;
-  left:0;
-  width:100%;
-  height:2px;
-  background:#00eaff;
-  animation:scan 3s linear infinite;
-  opacity:0.5;
-}
-
-/* ノイズ */
+/* 悪天候ノイズ */
 @keyframes noise{
   0%,100%{opacity:0;}
   50%{opacity:0.1;}
@@ -161,14 +81,14 @@ body{
 #noise{
   position:fixed;
   inset:0;
+  pointer-events:none;
   background:repeating-linear-gradient(
     0deg,
-    rgba(0,255,200,0.08),
-    rgba(0,255,200,0.08) 2px,
+    rgba(255,255,255,0.08),
+    rgba(255,255,255,0.08) 2px,
     transparent 2px,
     transparent 4px
   );
-  pointer-events:none;
   animation:noise 0.2s infinite;
   display:none;
 }
@@ -177,29 +97,28 @@ body{
 
 <body>
 
-<div id="hologram"></div>
 <div id="noise"></div>
 
 <div id="hud">
-
-  <div id="aiStatus">AI LINK ESTABLISHED</div>
 
   <div id="clock"></div>
   <div id="date"></div>
 
   <div class="divider"></div>
 
-  <div id="weather">
-    <img id="weatherIcon">
-    <div>
-      <div class="dataLine" id="location">KANAGAWA-NODE</div>
-      <div class="dataLine" id="tempText"></div>
-    </div>
+  <div class="dataLine">地域：横浜</div>
+  <div class="dataLine" id="weatherText"></div>
+  <div class="dataLine" id="details"></div>
+
+  <div class="gaugeContainer">
+    <div class="gauge" id="tempGauge"></div>
   </div>
 
-  <div id="tempBarContainer">
-    <div id="tempBar"></div>
-    <div id="scanline"></div>
+  <div class="divider"></div>
+
+  <div class="dataLine">バッテリー残量</div>
+  <div class="gaugeContainer">
+    <div class="gauge" id="batteryGauge"></div>
   </div>
 
 </div>
@@ -209,58 +128,71 @@ body{
 /* 時計 */
 function updateClock(){
   const now=new Date();
-  const time=now.toLocaleTimeString("ja-JP",{hour:'2-digit',minute:'2-digit'});
-  const date=now.toLocaleDateString("ja-JP",{month:'2-digit',day:'2-digit',weekday:'short'});
-  document.getElementById("clock").innerHTML=time;
-  document.getElementById("date").innerHTML=date;
-
-  if(Math.random()<0.1){
-    document.getElementById("clock").classList.add("glitch");
-    setTimeout(()=>{
-      document.getElementById("clock").classList.remove("glitch");
-    },300);
-  }
+  document.getElementById("clock").innerHTML=
+    now.toLocaleTimeString("ja-JP",{hour:'2-digit',minute:'2-digit'});
+  document.getElementById("date").innerHTML=
+    now.toLocaleDateString("ja-JP",{month:'2-digit',day:'2-digit',weekday:'long'});
 }
 setInterval(updateClock,1000);
 updateClock();
 
-/* AIメッセージランダム */
-const messages=[
-"AI LINK ESTABLISHED",
-"SATELLITE LOCKED",
-"ENVIRONMENT SCANNING",
-"WEATHER DATA SYNCED",
-"TACTICAL OVERLAY ACTIVE"
-];
-setInterval(()=>{
-  document.getElementById("aiStatus").innerHTML=
-  messages[Math.floor(Math.random()*messages.length)];
-},5000);
-
-/* 天気 */
-const apiKey="4dfed084e66b5b585ee8898bfb877e8d";
+/* 天気（横浜固定） */
+const apiKey="4dfed084e66b5b585ee8898bfb877e8d
+";
 const city="Yokohama,JP";
 
 fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&lang=ja&appid=${apiKey}`)
 .then(res=>res.json())
 .then(data=>{
-  const icon=data.weather[0].icon;
-  const main=data.weather[0].main;
+
   const temp=Math.round(data.main.temp);
+  const max=Math.round(data.main.temp_max);
+  const min=Math.round(data.main.temp_min);
+  const humidity=data.main.humidity;
+  const wind=data.wind.speed;
+  const rainProb = data.rain?.["1h"] ? Math.min(data.rain["1h"]*20,100) : 0;
+  const main=data.weather[0].main;
 
-  document.getElementById("weatherIcon").src=
-  `https://openweathermap.org/img/wn/${icon}@2x.png`;
+  document.getElementById("weatherText").innerHTML=
+    `気温 ${temp}℃（最高 ${max}℃ / 最低 ${min}℃）`;
 
-  document.getElementById("tempText").innerHTML=
-  `TEMP // ${temp} °C`;
+  document.getElementById("details").innerHTML=
+    `湿度 ${humidity}% ｜ 風速 ${wind}m/s ｜ 降水 ${rainProb}%`;
 
-  const percentage=Math.min((temp/40)*100,100);
-  document.getElementById("tempBar").style.width=percentage+"%";
+  document.getElementById("tempGauge").style.width=
+    Math.min((temp/40)*100,100)+"%";
 
+  /* 🎨 気温でHUD色変化 */
+  let color="#00ffaa"; //通常
+
+  if(temp >= 30){
+    color="#ff4444"; //暑い＝赤
+  } else if(temp <= 5){
+    color="#00ccff"; //寒い＝青
+  } else if(temp >=20 && temp <30){
+    color="#00ffaa"; //快適＝緑
+  }
+
+  document.body.style.color=color;
+
+  /* 悪天候ノイズ */
   if(main==="Rain"||main==="Snow"||main==="Thunderstorm"){
     document.getElementById("noise").style.display="block";
   }
+
 });
+
+/* バッテリー */
+if(navigator.getBattery){
+navigator.getBattery().then(battery=>{
+  function updateBattery(){
+    document.getElementById("batteryGauge").style.width=
+      (battery.level*100)+"%";
+  }
+  updateBattery();
+  battery.addEventListener("levelchange",updateBattery);
+});
+}
 </script>
 
 </body>
