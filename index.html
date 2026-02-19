@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cyber FPS Ultimate HUD</title>
+<title>Cyber FPS HUD Green Edition</title>
 
 <style>
 body{
@@ -11,39 +11,7 @@ body{
   background:transparent;
   font-family:monospace;
   overflow:hidden;
-  color:#00f7ff;
-}
-
-/* ===== 中央クロスヘア ===== */
-#crosshair{
-  position:fixed;
-  top:50%;
-  left:50%;
-  width:30px;
-  height:30px;
-  transform:translate(-50%,-50%);
-  pointer-events:none;
-}
-
-#crosshair::before,
-#crosshair::after{
-  content:"";
-  position:absolute;
-  background:#00f7ff;
-}
-
-#crosshair::before{
-  left:14px;
-  top:0;
-  width:2px;
-  height:30px;
-}
-
-#crosshair::after{
-  top:14px;
-  left:0;
-  width:30px;
-  height:2px;
+  color:#00ffaa;
 }
 
 /* ===== メインHUD ===== */
@@ -53,35 +21,37 @@ body{
   right:20px;
   width:380px;
   padding:20px;
-  border:2px solid #ff00ff;
-  box-shadow:0 0 20px #ff00ff,0 0 35px #00f7ff;
-  background:rgba(0,0,0,0.35);
+  border:2px solid #00ffaa;
+  box-shadow:
+    0 0 15px #00ffaa,
+    0 0 35px #00eaff;
+  background:rgba(0,0,0,0.30);
   backdrop-filter:blur(8px);
 }
 
-/* AIラベル */
+/* AIステータス */
 #aiStatus{
   font-size:12px;
-  color:#ff00ff;
+  color:#00eaff;
   margin-bottom:6px;
   letter-spacing:2px;
 }
 
-/* グリッチ */
-@keyframes glitch{
-  0%{ transform:translate(0); }
-  20%{ transform:translate(-1px,1px); }
-  40%{ transform:translate(1px,-1px); }
-  60%{ transform:translate(-1px,-1px); }
-  80%{ transform:translate(1px,1px); }
-  100%{ transform:translate(0); }
+/* ネオンパルス */
+@keyframes neonPulse{
+  0%,100%{
+    text-shadow:0 0 8px #00ffaa,0 0 18px #00eaff;
+  }
+  50%{
+    text-shadow:0 0 14px #00ffaa,0 0 30px #00eaff;
+  }
 }
 
-/* ダメージフラッシュ */
+/* ダメージ風 */
 @keyframes damageFlash{
-  0%{ background:rgba(255,0,0,0.0); }
-  50%{ background:rgba(255,0,0,0.25); }
-  100%{ background:rgba(255,0,0,0.0); }
+  0%{ background:rgba(0,255,200,0.0); }
+  50%{ background:rgba(0,255,200,0.15); }
+  100%{ background:rgba(0,255,200,0.0); }
 }
 
 .damage{
@@ -91,7 +61,7 @@ body{
 /* ノイズ */
 @keyframes noise{
   0%,100%{ opacity:0; }
-  50%{ opacity:0.15; }
+  50%{ opacity:0.12; }
 }
 
 #noise{
@@ -99,8 +69,8 @@ body{
   inset:0;
   background:repeating-linear-gradient(
     0deg,
-    rgba(0,255,255,0.1),
-    rgba(0,255,255,0.1) 2px,
+    rgba(0,255,200,0.08),
+    rgba(0,255,200,0.08) 2px,
     transparent 2px,
     transparent 4px
   );
@@ -113,22 +83,22 @@ body{
 #clock{
   font-size:56px;
   font-weight:bold;
-  color:#fff;
-  text-shadow:0 0 10px #00f7ff,0 0 20px #ff00ff;
-  animation:glitch 2s infinite;
+  color:white;
+  animation:neonPulse 2s infinite ease-in-out;
 }
 
 #date{
   font-size:14px;
-  color:#ff00ff;
+  color:#00eaff;
 }
 
 .divider{
   height:1px;
-  background:linear-gradient(to right,#00f7ff,#ff00ff);
+  background:linear-gradient(to right,#00ffaa,#00eaff);
   margin:12px 0;
 }
 
+/* 天気 */
 #weather{
   display:flex;
   align-items:center;
@@ -138,7 +108,7 @@ body{
 #weather img{
   width:50px;
   height:50px;
-  filter:drop-shadow(0 0 10px #00f7ff);
+  filter:drop-shadow(0 0 10px #00ffaa);
 }
 
 .dataLine{
@@ -146,18 +116,19 @@ body{
   margin-top:4px;
 }
 
+/* 温度バー */
 #tempBarContainer{
   margin-top:12px;
   width:100%;
   height:8px;
-  border:1px solid #ff00ff;
+  border:1px solid #00ffaa;
 }
 
 #tempBar{
   height:100%;
   width:50%;
-  background:linear-gradient(to right,#00f7ff,#ff00ff);
-  box-shadow:0 0 10px #ff00ff;
+  background:linear-gradient(to right,#00ffaa,#00eaff);
+  box-shadow:0 0 10px #00eaff;
   transition:width 0.4s ease;
 }
 </style>
@@ -165,12 +136,11 @@ body{
 
 <body>
 
-<div id="crosshair"></div>
 <div id="noise"></div>
 
 <div id="hud">
 
-  <div id="aiStatus">AI SYSTEM ONLINE</div>
+  <div id="aiStatus">AI WEATHER LINK // ACTIVE</div>
 
   <div id="clock"></div>
   <div id="date"></div>
@@ -223,7 +193,7 @@ fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&la
   const percentage=Math.min((temp/40)*100,100);
   document.getElementById("tempBar").style.width=percentage+"%";
 
-  /* 悪天候で演出 */
+  /* 悪天候演出 */
   if(main==="Rain" || main==="Snow" || main==="Thunderstorm"){
     document.getElementById("hud").classList.add("damage");
     document.getElementById("noise").style.display="block";
