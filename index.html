@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>業務用タクティカルHUD</title>
 
-<!-- Orbitronのみ使用 -->
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
 
 <style>
@@ -15,9 +14,10 @@ body{
   font-family:'Orbitron', monospace;
   overflow:hidden;
   color:#00ffaa;
+  transition:color 0.5s linear;
 }
 
-/* HUD本体 */
+/* HUD */
 #hud{
   position:fixed;
   top:20px;
@@ -31,7 +31,6 @@ body{
   transition:all 0.5s ease;
 }
 
-/* 時計 */
 #clock{
   font-size:60px;
   font-weight:bold;
@@ -53,6 +52,18 @@ body{
 .dataLine{
   font-size:14px;
   margin-top:4px;
+}
+
+#weatherBox{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+#weatherIcon{
+  width:60px;
+  height:60px;
+  filter:drop-shadow(0 0 10px currentColor);
 }
 
 /* ゲージ */
@@ -106,9 +117,14 @@ body{
 
   <div class="divider"></div>
 
-  <div class="dataLine">地域：横浜</div>
-  <div class="dataLine" id="weatherText"></div>
-  <div class="dataLine" id="details"></div>
+  <div id="weatherBox">
+    <img id="weatherIcon">
+    <div>
+      <div class="dataLine">地域：横浜</div>
+      <div class="dataLine" id="weatherText"></div>
+      <div class="dataLine" id="details"></div>
+    </div>
+  </div>
 
   <div class="gaugeContainer">
     <div class="gauge" id="tempGauge"></div>
@@ -136,7 +152,16 @@ function updateClock(){
 setInterval(updateClock,1000);
 updateClock();
 
-/* 天気（横浜固定） */
+/* 🌈 気温→滑らかカラー変換 */
+function getColorFromTemp(temp){
+  const minTemp=-5;
+  const maxTemp=40;
+  const ratio=(temp-minTemp)/(maxTemp-minTemp);
+  const hue=240-(ratio*240); 
+  return `hsl(${hue}, 100%, 60%)`;
+}
+
+/* 天気 */
 const apiKey="4dfed084e66b5b585ee8898bfb877e8d";
 const city="Yokohama,JP";
 
@@ -151,6 +176,10 @@ fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&la
   const wind=data.wind.speed;
   const rainProb = data.rain?.["1h"] ? Math.min(data.rain["1h"]*20,100) : 0;
   const main=data.weather[0].main;
+  const icon=data.weather[0].icon;
+
+  document.getElementById("weatherIcon").src=
+    `https://openweathermap.org/img/wn/${icon}@2x.png`;
 
   document.getElementById("weatherText").innerHTML=
     `気温 ${temp}℃（最高 ${max}℃ / 最低 ${min}℃）`;
@@ -161,18 +190,9 @@ fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&la
   document.getElementById("tempGauge").style.width=
     Math.min((temp/40)*100,100)+"%";
 
-  /* 🎨 気温でHUD色変化 */
-  let color="#00ffaa"; //通常
-
-  if(temp >= 30){
-    color="#ff4444"; //暑い＝赤
-  } else if(temp <= 5){
-    color="#00ccff"; //寒い＝青
-  } else if(temp >=20 && temp <30){
-    color="#00ffaa"; //快適＝緑
-  }
-
-  document.body.style.color=color;
+  /* 🌈 滑らか色変化 */
+  const dynamicColor=getColorFromTemp(temp);
+  document.body.style.color=dynamicColor;
 
   /* 悪天候ノイズ */
   if(main==="Rain"||main==="Snow"||main==="Thunderstorm"){
@@ -196,3 +216,4 @@ navigator.getBattery().then(battery=>{
 
 </body>
 </html>
+
