@@ -137,8 +137,7 @@ setInterval(updateClock,1000);
 updateClock();
 
 /* 天気（横浜固定） */
-const apiKey="4dfed084e66b5b585ee8898bfb877e8d
-";
+const apiKey="4dfed084e66b5b585ee8898bfb877e8d";
 const city="Yokohama,JP";
 
 fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&lang=ja&appid=${apiKey}`)
