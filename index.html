@@ -150,7 +150,7 @@ fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&la
   const tempMax=Math.round(data.main.temp_max);
 
   document.getElementById("weatherIcon").src=
-  `https://openweathermap.org/img/wn/${icon}@2x.png`;
+`https://cdn.jsdelivr.net/gh/openweathermap/img/wn/${icon}@2x.png`;
 
   const tempBox=document.getElementById("maxTemp");
   tempBox.innerHTML=`最高${tempMax}℃`;
