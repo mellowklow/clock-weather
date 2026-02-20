@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>業務用タクティカルHUD</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
 
@@ -31,11 +30,49 @@ body{
   transition:all 0.5s ease;
 }
 
+/* ===== 強化グリッチ ===== */
+@keyframes glitchStrong{
+  0%{ transform:translate(0); }
+  15%{ transform:translate(-4px,2px); }
+  30%{ transform:translate(4px,-2px); }
+  45%{ transform:translate(-3px,-3px); }
+  60%{ transform:translate(3px,3px); }
+  75%{ transform:translate(-2px,2px); }
+  100%{ transform:translate(0); }
+}
+
+.glitch{
+  animation:glitchStrong 0.35s;
+}
+
+/* RGBズレ風 */
+.glitch::before,
+.glitch::after{
+  content:attr(data-text);
+  position:absolute;
+  left:0;
+  right:0;
+}
+
+.glitch::before{
+  color:red;
+  transform:translate(-2px,0);
+  opacity:0.7;
+}
+
+.glitch::after{
+  color:cyan;
+  transform:translate(2px,0);
+  opacity:0.7;
+}
+
+/* 時計 */
 #clock{
   font-size:60px;
   font-weight:bold;
   color:white;
   text-shadow:0 0 15px currentColor,0 0 30px currentColor;
+  position:relative;
 }
 
 #date{
@@ -82,33 +119,10 @@ body{
   box-shadow:0 0 10px currentColor;
   transition:width 0.5s ease;
 }
-
-/* 悪天候ノイズ */
-@keyframes noise{
-  0%,100%{opacity:0;}
-  50%{opacity:0.1;}
-}
-
-#noise{
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  background:repeating-linear-gradient(
-    0deg,
-    rgba(255,255,255,0.08),
-    rgba(255,255,255,0.08) 2px,
-    transparent 2px,
-    transparent 4px
-  );
-  animation:noise 0.2s infinite;
-  display:none;
-}
 </style>
 </head>
 
 <body>
-
-<div id="noise"></div>
 
 <div id="hud">
 
@@ -130,35 +144,40 @@ body{
     <div class="gauge" id="tempGauge"></div>
   </div>
 
-  <div class="divider"></div>
-
-  <div class="dataLine">バッテリー残量</div>
-  <div class="gaugeContainer">
-    <div class="gauge" id="batteryGauge"></div>
-  </div>
-
 </div>
 
 <script>
 
-/* 時計 */
+/* 時計＋ランダム強グリッチ */
 function updateClock(){
   const now=new Date();
-  document.getElementById("clock").innerHTML=
-    now.toLocaleTimeString("ja-JP",{hour:'2-digit',minute:'2-digit'});
+  const time=now.toLocaleTimeString("ja-JP",{hour:'2-digit',minute:'2-digit'});
+  document.getElementById("clock").innerHTML=time;
+  document.getElementById("clock").setAttribute("data-text",time);
+
   document.getElementById("date").innerHTML=
     now.toLocaleDateString("ja-JP",{month:'2-digit',day:'2-digit',weekday:'long'});
+
+  if(Math.random()<0.25){
+    const clock=document.getElementById("clock");
+    clock.classList.add("glitch");
+    setTimeout(()=>{ clock.classList.remove("glitch"); },350);
+  }
 }
 setInterval(updateClock,1000);
 updateClock();
 
-/* 🌈 気温→滑らかカラー変換 */
+/* 🌈 新カラー仕様 */
 function getColorFromTemp(temp){
+
+  if(temp >= 30) return "hsl(0,100%,60%)";   // 赤固定
+  if(temp >= 13 && temp <= 17) return "hsl(140,100%,50%)"; // 15℃前後＝緑
+
   const minTemp=-5;
-  const maxTemp=40;
+  const maxTemp=30;
   const ratio=(temp-minTemp)/(maxTemp-minTemp);
-  const hue=240-(ratio*240); 
-  return `hsl(${hue}, 100%, 60%)`;
+  const hue=240-(ratio*240);
+  return `hsl(${hue},100%,60%)`;
 }
 
 /* 天気 */
@@ -174,8 +193,6 @@ fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&la
   const min=Math.round(data.main.temp_min);
   const humidity=data.main.humidity;
   const wind=data.wind.speed;
-  const rainProb = data.rain?.["1h"] ? Math.min(data.rain["1h"]*20,100) : 0;
-  const main=data.weather[0].main;
   const icon=data.weather[0].icon;
 
   document.getElementById("weatherIcon").src=
@@ -185,35 +202,16 @@ fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&la
     `気温 ${temp}℃（最高 ${max}℃ / 最低 ${min}℃）`;
 
   document.getElementById("details").innerHTML=
-    `湿度 ${humidity}% ｜ 風速 ${wind}m/s ｜ 降水 ${rainProb}%`;
+    `湿度 ${humidity}% ｜ 風速 ${wind}m/s`;
 
   document.getElementById("tempGauge").style.width=
     Math.min((temp/40)*100,100)+"%";
 
-  /* 🌈 滑らか色変化 */
   const dynamicColor=getColorFromTemp(temp);
   document.body.style.color=dynamicColor;
 
-  /* 悪天候ノイズ */
-  if(main==="Rain"||main==="Snow"||main==="Thunderstorm"){
-    document.getElementById("noise").style.display="block";
-  }
-
 });
-
-/* バッテリー */
-if(navigator.getBattery){
-navigator.getBattery().then(battery=>{
-  function updateBattery(){
-    document.getElementById("batteryGauge").style.width=
-      (battery.level*100)+"%";
-  }
-  updateBattery();
-  battery.addEventListener("levelchange",updateBattery);
-});
-}
 </script>
 
 </body>
 </html>
-
