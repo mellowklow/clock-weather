@@ -16,7 +16,6 @@ body{
   transition:color 0.5s linear;
 }
 
-/* HUD */
 #hud{
   position:fixed;
   top:20px;
@@ -33,11 +32,10 @@ body{
 /* ===== 強化グリッチ ===== */
 @keyframes glitchStrong{
   0%{ transform:translate(0); }
-  15%{ transform:translate(-4px,2px); }
-  30%{ transform:translate(4px,-2px); }
-  45%{ transform:translate(-3px,-3px); }
-  60%{ transform:translate(3px,3px); }
-  75%{ transform:translate(-2px,2px); }
+  20%{ transform:translate(-5px,3px); }
+  40%{ transform:translate(5px,-3px); }
+  60%{ transform:translate(-4px,-4px); }
+  80%{ transform:translate(4px,4px); }
   100%{ transform:translate(0); }
 }
 
@@ -45,28 +43,6 @@ body{
   animation:glitchStrong 0.35s;
 }
 
-/* RGBズレ風 */
-.glitch::before,
-.glitch::after{
-  content:attr(data-text);
-  position:absolute;
-  left:0;
-  right:0;
-}
-
-.glitch::before{
-  color:red;
-  transform:translate(-2px,0);
-  opacity:0.7;
-}
-
-.glitch::after{
-  color:cyan;
-  transform:translate(2px,0);
-  opacity:0.7;
-}
-
-/* 時計 */
 #clock{
   font-size:60px;
   font-weight:bold;
@@ -144,16 +120,22 @@ body{
     <div class="gauge" id="tempGauge"></div>
   </div>
 
+  <div class="divider"></div>
+
+  <div class="dataLine" id="batteryText">バッテリー --%</div>
+  <div class="gaugeContainer">
+    <div class="gauge" id="batteryGauge"></div>
+  </div>
+
 </div>
 
 <script>
 
-/* 時計＋ランダム強グリッチ */
+/* 時計＋強グリッチ */
 function updateClock(){
   const now=new Date();
   const time=now.toLocaleTimeString("ja-JP",{hour:'2-digit',minute:'2-digit'});
   document.getElementById("clock").innerHTML=time;
-  document.getElementById("clock").setAttribute("data-text",time);
 
   document.getElementById("date").innerHTML=
     now.toLocaleDateString("ja-JP",{month:'2-digit',day:'2-digit',weekday:'long'});
@@ -167,10 +149,10 @@ function updateClock(){
 setInterval(updateClock,1000);
 updateClock();
 
-/* 🌈 新カラー仕様 */
+/* 🌈 温度カラー仕様 */
 function getColorFromTemp(temp){
 
-  if(temp >= 30) return "hsl(0,100%,60%)";   // 赤固定
+  if(temp >= 30) return "hsl(0,100%,60%)";      // 赤
   if(temp >= 13 && temp <= 17) return "hsl(140,100%,50%)"; // 15℃前後＝緑
 
   const minTemp=-5;
@@ -211,6 +193,28 @@ fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&la
   document.body.style.color=dynamicColor;
 
 });
+
+/* 🔋 バッテリー復活 */
+if(navigator.getBattery){
+navigator.getBattery().then(battery=>{
+
+  function updateBattery(){
+    const level=Math.round(battery.level*100);
+    document.getElementById("batteryGauge").style.width=level+"%";
+    document.getElementById("batteryText").innerHTML=
+      "バッテリー "+level+"%";
+
+    /* 低残量警告 */
+    if(level<=20){
+      document.getElementById("batteryGauge").style.background="red";
+    }
+  }
+
+  updateBattery();
+  battery.addEventListener("levelchange",updateBattery);
+});
+}
+
 </script>
 
 </body>
